@@ -1,7 +1,5 @@
-import datetime
 import ast
 import pandas as pd
-#import lda
 import json
 import gensim
 import re
@@ -12,16 +10,13 @@ from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 import matplotlib.pyplot as plt
 from gensim import corpora, models
-#en_stop = get_stop_words('en')
-from sklearn import preprocessing
 import unicodedata
 operators = set(('Ive'))
-cachedStopWords = set(stopwords.words("english")) + operators
+cachedStopWords = stopwords.words("english")
 
 
 tokenizer = RegexpTokenizer(r'\w+')
 p_stemmer = PorterStemmer()
-from openpyxl import Workbook
 
 class PreProcess:
     def __init__(self,file_path,file_name):
@@ -48,32 +43,33 @@ class PreProcess:
         data = data[data.comment != "See Raw Data" ]
         data = data[data.comment != "See raw data" ]
         data.replace(to_replace=-1, value=np.nan, inplace=True, regex=True)
-        #pd.to_numeric(data.recommendation,errors='coerce')
         data = data.convert_objects(convert_numeric=True)
-        #data.comment.toString()
-        print(type(data.comment.ix[1]))
         return data
 
-    def removeSingleChars(subject):
+    def removeSingleChars(self,subject):
         result = []
         for i in subject:
             if(len(i)>2):
                 result.append(i)
         return result
 
-    def removeNonLatin(subject):
+    def removeNonLatin(self,subject):
         result = re.sub(r"[^\x00-\x7F]+","", subject)
         return result
 
     def initialProcess(self):
         data = self.loadToDataFrame()
-        for i in range(0,len(data)):
-            raw_doc = self.removeNonLatin(data.comment.ix[i].lower())
+        for i in data.comment:
+            raw_doc = self.removeNonLatin(i)
             tokens = tokenizer.tokenize(raw_doc)
-            stopped_tokens = [i for i in tokens if not i in cachedStopWords]
-            stemmed_tokens = [p_stemmer.stem(i) for i in stopped_tokens]
+            stopped_tokens = [j for j in tokens if not j in cachedStopWords]
+            stemmed_tokens = [p_stemmer.stem(k) for k in stopped_tokens]
             self.corpus.append(self.removeSingleChars(stemmed_tokens))
+        return self.corpus
 
-
-PreProcess("/Users/eirinimilaiou/Documents/ucl/CACI/test_data/","Example_Data.xlsx").loadToDataFrame()
+    def dictionary(self):
+        texts = self.initialProcess()
+        dictionary = corpora.Dictionary(texts)
+        #Next, our dictionary must be converted into a bag-of-words:
+        my_corpus = [dictionary.doc2bow(text) for text in texts]
 
