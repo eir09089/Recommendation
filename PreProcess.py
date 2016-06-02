@@ -11,8 +11,8 @@ from nltk.stem.porter import PorterStemmer
 import matplotlib.pyplot as plt
 from gensim import corpora, models
 import unicodedata
-operators = set(('Ive'))
-cachedStopWords = stopwords.words("english")
+operators = set(("good","bad","not"))
+cachedStopWords = set(stopwords.words("english")) - operators
 
 
 tokenizer = RegexpTokenizer(r'\w+')
@@ -66,10 +66,4 @@ class PreProcess:
             stemmed_tokens = [p_stemmer.stem(k) for k in stopped_tokens]
             self.corpus.append(self.removeSingleChars(stemmed_tokens))
         return self.corpus
-
-    def dictionary(self):
-        texts = self.initialProcess()
-        dictionary = corpora.Dictionary(texts)
-        #Next, our dictionary must be converted into a bag-of-words:
-        my_corpus = [dictionary.doc2bow(text) for text in texts]
 
